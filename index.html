@@ -413,7 +413,7 @@
             },
             caculateMoratageTotalCost() {
                 const reducer = (total, payment) => total + payment.interest + payment.capital;
-                return this.numberToFixed(this.payments.reduce(reducer, 0));
+                return this.downPaymentAmountRounded + this.numberToFixed(this.payments.reduce(reducer, 0));
             },
             caculateVariableMoratageTotalInterest() {
                 const reducer = (total, payment) => total + payment.interest;
@@ -421,7 +421,7 @@
             },
             caculateVariableMoratageTotalCost() {
                 const reducer = (total, payment) => total + payment.interest + payment.capital;
-                return this.numberToFixed(this.variablePayments.reduce(reducer, 0));
+                return this.downPaymentAmountRounded + this.numberToFixed(this.variablePayments.reduce(reducer, 0));
             },
         },
         methods: {
