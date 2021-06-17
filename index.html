@@ -220,24 +220,21 @@
                     <v-col>
                         <v-card class="mx-auto" max-width="350" style="margin-top: -80px">
                             <v-card-title>
-                                Variable Mortgage Config
+                                Variable Mortgage Prediction Rates
                             </v-card-title>
 
                             <v-card-text>
-                                <v-text-field
-                                        v-model="paymentConfig.estimatedVariableMortgageRateInit"
-                                        type="number"
-                                        label="Initial Interest rate"
-                                        suffix="%"
-                                        outlined>
-                                </v-text-field>
-                            </v-card-text>
-
-                            <v-card-title>
-                                Variable Mortgage Predictions
-                            </v-card-title>
-
-                            <v-card-text>
+                                <v-row>
+                                    <v-col>
+                                        <v-text-field
+                                                v-model="paymentConfig.estimatedVariableMortgageRateInit"
+                                                type="number"
+                                                label="Initial Interest rate"
+                                                suffix="%"
+                                                outlined>
+                                        </v-text-field>
+                                    </v-col>
+                                </v-row>
                                 <v-row v-for="(item, key) of paymentConfig.estimatedVariableMortgageRate"
                                        class="ma-0 pa-0">
                                     <v-col class="ma-0 pa-0">
