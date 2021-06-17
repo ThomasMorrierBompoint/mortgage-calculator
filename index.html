@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+<div id="app">
+    <v-app>
+        <v-main>
+            <v-container>
+                <v-row>
+                    <v-col>
+                        <v-card class="mx-auto" max-width="550">
+                            <v-card class="mx-auto mb-10 pa-5">
+                                <v-simple-table>
+                                    <template v-slot:default>
+                                        <thead>
+                                        <tr>
+                                            <th class="text-center">
+                                                Month
+                                            </th>
+                                            <th class="text-center">
+                                                Interest
+                                            </th>
+                                            <th class="text-center">
+                                                Capital
+                                            </th>
+                                            <th class="text-center">
+                                                Residual balance
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr v-for="item in paymentsFiltered" :key="item.id">
+                                            <td class="text-center">{{ item.id }}</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.interest) }} $</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.capital) }} $</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.balance) }} $</td>
+                                        </tr>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
+
+                                <v-card-title>
+                                    Fix Mortgage: {{ numberWithSpaces(downPaymentAmountRounded) }} $
+                                    <br>
+                                    Total Interest ({{ interestRate }} %): {{ numberWithSpaces(caculateMoratageTotalInterest) }} $
+                                    <br>
+                                    Total cost: {{ numberWithSpaces(caculateMoratageTotalCost) }} $
+                                </v-card-title>
+                            </v-card>
+
+                            <v-card-title>
+                                Calculate mortgage payments
+                            </v-card-title>
+
+                            <v-card-text>
+                                <v-text-field
+                                        v-model="propertyPriceInput"
+                                        type="number"
+                                        label="Price of property (K)"
+                                        prefix="$"
+                                        suffix="K"
+                                        outlined>
+                                </v-text-field>
+
+                                <div style="display: flex">
+                                    <v-switch
+                                            v-model="isDownPaymentPercent"
+                                            class="pa-2"
+                                            :label="`${isDownPaymentPercent ? '%' : '$'}`"
+                                            @change="onChange"
+                                    ></v-switch>
+                                    <v-text-field
+                                            v-model="downPaymentPercent"
+                                            class="pa-2"
+                                            type="number"
+                                            prefix="%"
+                                            :label="isDownPaymentPercent ? 'Down payment' : ''"
+                                            :outlined="isDownPaymentPercent"
+                                            :filled="!isDownPaymentPercent"
+                                            :disabled="!isDownPaymentPercent">
+                                    </v-text-field>
+                                    <v-text-field
+                                            v-model="downPaymentAmount"
+                                            class="pa-2"
+                                            type="number"
+                                            prefix="$"
+                                            suffix="K"
+                                            :label="!isDownPaymentPercent ? 'Down payment (K)' : ''"
+                                            :outlined="!isDownPaymentPercent"
+                                            :filled="isDownPaymentPercent"
+                                            :disabled="isDownPaymentPercent">
+                                    </v-text-field>
+                                </div>
+
+                                <v-text-field
+                                        type="number"
+                                        label="Mortgage amount"
+                                        :value="downPaymentAmountRounded"
+                                        suffix="$"
+                                        filled
+                                        readonly>
+                                </v-text-field>
+
+                                <v-row>
+                                    <v-col>
+                                        <v-text-field
+                                                type="number"
+                                                label="Interest rate"
+                                                :value="interestRate"
+                                                suffix="%"
+                                                filled
+                                                readonly>
+                                        </v-text-field>
+                                    </v-col>
+
+                                    <v-col>
+                                        <v-text-field
+                                                type="number"
+                                                label="Amortization"
+                                                :value="amortization"
+                                                suffix="years"
+                                                filled
+                                                readonly>
+                                        </v-text-field>
+                                    </v-col>
+                                </v-row>
+
+                                <v-text-field
+                                        v-model="paymentPerYear"
+                                        type="number"
+                                        label="Payment frequency"
+                                        suffix="/years">
+                                </v-text-field>
+
+                                <v-text-field
+                                        type="number"
+                                        label="Payment amount"
+                                        :value="payment"
+                                        suffix="$"
+                                        filled
+                                        readonly>
+                                </v-text-field>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                    <v-col>
+                        <v-card class="mx-auto" max-width="550">
+                            <v-card class="mx-auto pa-5">
+                                <v-simple-table>
+                                    <template v-slot:default>
+                                        <thead>
+                                        <tr>
+                                            <th class="text-center">
+                                                Month
+                                            </th>
+                                            <th class="text-center">
+                                                Interest rate
+                                            </th>
+                                            <th class="text-center">
+                                                Interest
+                                            </th>
+                                            <th class="text-center">
+                                                Capital
+                                            </th>
+                                            <th class="text-center">
+                                                Residual balance
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr v-for="item in variablePaymentsFiltered" :key="item.id">
+                                            <td class="text-center">{{ item.id % 12 === 0 ? `(${item.id / 12}) ${item.id}` : item.id }}</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.interestRate) }} %</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.interest) }} $</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.capital) }} $</td>
+                                            <td class="text-center">{{ numberWithSpaces(item.balance) }} $</td>
+                                        </tr>
+                                        </tbody>
+                                    </template>
+                                </v-simple-table>
+
+                                <v-card-title>
+                                    Variable Mortgage: {{ numberWithSpaces(downPaymentAmountRounded) }} $
+                                    <br>
+                                    Total Interest: {{ numberWithSpaces(caculateVariableMoratageTotalInterest) }} $
+                                    <br>
+                                    Total cost: {{ numberWithSpaces(caculateVariableMoratageTotalCost) }} $
+                                </v-card-title>
+                            </v-card>
+                        </v-card>
+                    </v-col>
+                </v-row>
+            </v-container>
+        </v-main>
+    </v-app>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        vuetify: new Vuetify(),
+        data() {
+            return {
+                propertyPriceInput: 685.0,
+                downPayment: 20.0,
+                isDownPaymentPercent: true,
+                amortization: 25.0,
+                interestRate: 2.12,
+                paymentPerYear: 12.0,
+                paymentConfig: {
+                    ESTIMATED_VARIABLE_MORTGAGE_RATE: {
+                        0: 1.25,
+                        3: 1.45,
+                        6: 1.65,
+                        9: 1.75,
+                        12: 1.85,
+                        15: 1.95,
+                        18: 2.0,
+                        21: 2.10,
+                        24: 2.15,
+                        27: 2.25,
+                        36: 2.50,
+                        48: 2.85,
+                    },
+                    INITIAL_INTEREST_RATE: 1.25,
+                    INTEREST_RATE_INCREMENT: 0.5,
+                    INTEREST_RATE_INTERVAL: 3, // Increment every x months
+                    PAYMENT_MAX_QTY_FILTER: 60,
+                }
+            };
+        },
+        computed: {
+            propertyPrice() {
+                return this.propertyPriceInput * 1000.0;
+            },
+            downPaymentPercent: {
+                get() {
+                    if (this.isDownPaymentPercent) {
+                        return this.downPayment;
+                    } else {
+                        return parseFloat((this.downPaymentAmount * 100.0 / this.propertyPrice).toFixed(3));
+                    }
+                },
+                set(value) {
+                    this.downPayment = value;
+                }
+            },
+            downPaymentAmount: {
+                get() {
+                    if (this.isDownPaymentPercent) {
+                        return this.numberToFixed(this.propertyPrice * this.downPayment / 100.0 / 1000.0);
+                    } else {
+                        return this.downPayment;
+                    }
+                },
+                set(value) {
+                    this.downPayment = value;
+                }
+            },
+            downPaymentAmountRounded() {
+                const downPayment = this.isDownPaymentPercent ? this.propertyPrice * this.downPayment / 100.0 : this.downPayment * 1000.0;
+                return this.numberToFixed(this.propertyPrice - downPayment);
+            },
+            payment() {
+                const p = this.downPaymentAmountRounded;
+                const r = this.interestRate / 100.0;
+                const t = this.amortization;
+                const n = this.paymentPerYear;
+
+                const interestRatio = r / n;
+                const offSet1 = Math.pow(1 + interestRatio, n * t);
+                const offSet2 = offSet1 - 1;
+
+                return this.numberToFixed(p * interestRatio * offSet1 / offSet2);
+            },
+            payments() {
+                const payments = [];
+
+                let residualBalance = this.downPaymentAmountRounded;
+                for (let i = 0; i < this.amortization * this.paymentPerYear; i++) {
+                    const paymentInterest = this.calculatePaymentInterest(residualBalance, this.interestRate, this.paymentPerYear);
+                    const paymentCapital = this.payment - paymentInterest;
+
+                    residualBalance -= paymentCapital;
+
+                    payments.push({
+                        id: i + 1,
+                        interest: paymentInterest,
+                        capital: paymentCapital,
+                        balance: residualBalance,
+                    });
+                }
+
+                return payments;
+            },
+            paymentsFiltered() {
+                return this.payments.slice(0 , this.paymentConfig.PAYMENT_MAX_QTY_FILTER).filter((item) => item.id === 1 || item.id % this.paymentConfig.INTEREST_RATE_INTERVAL === 0)
+            },
+            variablePayments() {
+                const payments = [];
+                const defaultInterestRate = this.interestRate;
+
+                let interestRate = this.paymentConfig.ESTIMATED_VARIABLE_MORTGAGE_RATE[0];
+                let residualBalance = this.downPaymentAmountRounded;
+
+                for (let i = 0; i < this.amortization * this.paymentPerYear; i++) {
+                    if (this.paymentConfig.ESTIMATED_VARIABLE_MORTGAGE_RATE[i]) {
+                        interestRate = this.paymentConfig.ESTIMATED_VARIABLE_MORTGAGE_RATE[i];
+                    }
+
+                    if (i > this.paymentPerYear * 5 - 1) {
+                        interestRate = defaultInterestRate;
+                    }
+
+                    const paymentInterest = this.calculatePaymentInterest(residualBalance, interestRate, this.paymentPerYear);
+                    const paymentCapital = this.payment - paymentInterest;
+
+                    residualBalance -= paymentCapital;
+
+                    payments.push({
+                        id: i + 1,
+                        interestRate,
+                        interest: paymentInterest,
+                        capital: paymentCapital,
+                        balance: residualBalance,
+                    });
+                }
+
+                return payments;
+            },
+            variablePaymentsFiltered() {
+                return this.variablePayments.slice(0 , this.paymentConfig.PAYMENT_MAX_QTY_FILTER).filter((item) => item.id === 1 || item.id % this.paymentConfig.INTEREST_RATE_INTERVAL === 0)
+            },
+            caculateMoratageTotalInterest() {
+                const reducer = (total, payment) => total + payment.interest;
+                return this.numberToFixed(this.payments.reduce(reducer, 0));
+            },
+            caculateMoratageTotalCost() {
+                const reducer = (total, payment) => total + payment.interest + payment.capital;
+                return this.numberToFixed(this.payments.reduce(reducer, 0));
+            },
+            caculateVariableMoratageTotalInterest() {
+                console.log(this.variablePayments);
+                const reducer = (total, payment) => total + payment.interest;
+                return this.numberToFixed(this.variablePayments.reduce(reducer, 0));
+            },
+            caculateVariableMoratageTotalCost() {
+                const reducer = (total, payment) => total + payment.interest + payment.capital;
+                return this.numberToFixed(this.variablePayments.reduce(reducer, 0));
+            },
+        },
+        methods: {
+            numberToFixed(number = 0, precision = 2) {
+                return parseFloat(number.toFixed(precision));
+            },
+            numberWithSpaces(x) {
+                x = x.toFixed(2);
+                const pattern = /(-?\d+)(\d{3})/;
+                while (pattern.test(x))
+                    x = x.replace(pattern, "$1 $2");
+                return x;
+            },
+            onChange() {
+                this.downPaymentPercent = 0;
+                this.downPaymentAmount = 0;
+            },
+            calculatePaymentInterest(p, r, n) {
+                return p * this.numberToFixed(r / 100.0 / n, 10);
+            },
+        },
+    });
+
+    /*
+    const numberToFixed = (number = 0, precision = 2) => parseFloat(number.toFixed(precision));
+
+    // Loan amount (p)
+    // Interest rate (r)
+    // Number of years (t)
+    // Payments per year (n)
+    const calculatePayment = (p, r, t, n) => {
+        const interestRatio = r / n;
+        const offSet1 = Math.pow(1 + interestRatio, n * t);
+        const offSet2 = offSet1 - 1;
+
+        return p * interestRatio * offSet1 / offSet2;
+    }
+
+    // Loan amount (p)
+    // Interest rate (r)
+    // Number of years (t)
+    // Payments per year (n)
+    const calculatePaymentInterest = (p, r, n) => {
+        return p * numberToFixed(r / n, 10);
+    }
+
+    const payments = [];
+    const propertyPrice = 685000.0;
+    const downPayment = 137000.0;
+    const downPaymentPercentage = 0.20;
+    const amortization = 25.0;
+    const interestRate = 2.12 / 100.0;
+    const paymentPerYear = 12.0;
+    const paymentTotalQty = amortization * paymentPerYear;
+
+    let loanAmount = propertyPrice;
+
+    if (downPayment) {
+        loanAmount = propertyPrice - downPayment;
+    } else if (downPaymentPercentage) {
+        loanAmount = propertyPrice - (propertyPrice * downPaymentPercentage);
+    }
+
+    const payment = numberToFixed(calculatePayment(loanAmount, interestRate, amortization, paymentPerYear));
+
+    let residualBalance = loanAmount;
+    for (let i = 0; i < paymentTotalQty; i++) {
+        const paymentInterest = calculatePaymentInterest(residualBalance, interestRate, paymentPerYear);
+        const paymentCapital = payment - paymentInterest;
+
+        residualBalance -= paymentCapital;
+
+        payments.push({
+            interest: paymentInterest.toFixed(2),
+            capital: paymentCapital.toFixed(2),
+            balance: residualBalance.toFixed(2)
+        });
+    }
+
+    for (let i = 0; i < 6; i++) {
+        console.log(i * 12, payments[i ? i * 12 - 1 : 0]);
+    }
+    */
+</script>
+</body>
+</html>
