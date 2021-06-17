@@ -14,7 +14,122 @@
                 <v-row>
                     <v-col>
                         <v-card class="mx-auto" max-width="550">
+                            <v-card-title>
+                                Calculate mortgage payments
+                                <v-spacer></v-spacer>
+                                <v-switch
+                                        v-model="isFixMortgageVisible"
+                                        :label="`${isFixMortgageVisible ? 'Hide' : 'Show'}`"
+                                ></v-switch>
+                            </v-card-title>
+
+                            <v-card-text v-show="isFixMortgageVisible">
+                                <v-text-field
+                                        v-model="propertyPriceInput"
+                                        type="number"
+                                        label="Price of property (K)"
+                                        prefix="$"
+                                        suffix="K"
+                                        outlined>
+                                </v-text-field>
+
+                                <v-row>
+                                    <v-col>
+                                        <v-switch
+                                                v-model="isDownPaymentPercent"
+                                                :label="`${isDownPaymentPercent ? '%' : '$'}`"
+                                                @change="onChange"
+                                        ></v-switch>
+                                    </v-col>
+                                    <v-col>
+                                        <v-text-field
+                                                v-model="downPaymentPercent"
+                                                type="number"
+                                                prefix="%"
+                                                :label="isDownPaymentPercent ? 'Down payment' : ''"
+                                                :outlined="isDownPaymentPercent"
+                                                :filled="!isDownPaymentPercent"
+                                                :disabled="!isDownPaymentPercent">
+                                        </v-text-field>
+                                    </v-col>
+                                    <v-col>
+                                        <v-text-field
+                                                v-model="downPaymentAmount"
+                                                type="number"
+                                                prefix="$"
+                                                suffix="K"
+                                                :label="!isDownPaymentPercent ? 'Down payment (K)' : ''"
+                                                :outlined="!isDownPaymentPercent"
+                                                :filled="isDownPaymentPercent"
+                                                :disabled="isDownPaymentPercent">
+                                        </v-text-field>
+                                    </v-col>
+                                </v-row>
+
+                                <v-text-field
+                                        type="number"
+                                        label="Mortgage amount"
+                                        :value="downPaymentAmountRounded"
+                                        suffix="$"
+                                        filled
+                                        readonly>
+                                </v-text-field>
+
+                                <v-row>
+                                    <v-col>
+                                        <v-text-field
+                                                v-model="interestRate"
+                                                type="number"
+                                                label="Interest rate"
+                                                suffix="%"
+                                                outlined>
+                                        </v-text-field>
+                                    </v-col>
+
+                                    <v-col>
+                                        <v-text-field
+                                                v-model="amortization"
+                                                type="number"
+                                                label="Amortization"
+                                                suffix="years"
+                                                outlined>
+                                        </v-text-field>
+                                    </v-col>
+                                </v-row>
+
+                                <v-text-field
+                                        v-model="paymentPerYear"
+                                        type="number"
+                                        label="Payment frequency"
+                                        suffix="/years"
+                                        outlined>
+                                </v-text-field>
+
+                                <v-text-field
+                                        type="number"
+                                        label="Payment amount"
+                                        :value="payment"
+                                        suffix="$"
+                                        filled
+                                        readonly>
+                                </v-text-field>
+                            </v-card-text>
+                        </v-card>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col>
+                        <v-card class="mx-auto" max-width="550">
                             <v-card class="mx-auto mb-10 pa-5">
+                                <h4>
+                                    Fix Mortgage Rate ({{ interestRate }} %):
+                                    {{ numberWithSpaces(downPaymentAmountRounded) }} $
+                                    <br>
+                                    Total Interest: {{ numberWithSpaces(caculateMoratageTotalInterest) }} $
+                                    <br>
+                                    Total cost: {{ numberWithSpaces(caculateMoratageTotalCost) }} $
+                                </h4>
+
                                 <v-simple-table>
                                     <template v-slot:default>
                                         <thead>
@@ -43,114 +158,20 @@
                                         </tbody>
                                     </template>
                                 </v-simple-table>
-
-                                <v-card-title>
-                                    Fix Mortgage: {{ numberWithSpaces(downPaymentAmountRounded) }} $
-                                    <br>
-                                    Total Interest ({{ interestRate }} %): {{ numberWithSpaces(caculateMoratageTotalInterest) }} $
-                                    <br>
-                                    Total cost: {{ numberWithSpaces(caculateMoratageTotalCost) }} $
-                                </v-card-title>
                             </v-card>
-
-                            <v-card-title>
-                                Calculate mortgage payments
-                            </v-card-title>
-
-                            <v-card-text>
-                                <v-text-field
-                                        v-model="propertyPriceInput"
-                                        type="number"
-                                        label="Price of property (K)"
-                                        prefix="$"
-                                        suffix="K"
-                                        outlined>
-                                </v-text-field>
-
-                                <div style="display: flex">
-                                    <v-switch
-                                            v-model="isDownPaymentPercent"
-                                            class="pa-2"
-                                            :label="`${isDownPaymentPercent ? '%' : '$'}`"
-                                            @change="onChange"
-                                    ></v-switch>
-                                    <v-text-field
-                                            v-model="downPaymentPercent"
-                                            class="pa-2"
-                                            type="number"
-                                            prefix="%"
-                                            :label="isDownPaymentPercent ? 'Down payment' : ''"
-                                            :outlined="isDownPaymentPercent"
-                                            :filled="!isDownPaymentPercent"
-                                            :disabled="!isDownPaymentPercent">
-                                    </v-text-field>
-                                    <v-text-field
-                                            v-model="downPaymentAmount"
-                                            class="pa-2"
-                                            type="number"
-                                            prefix="$"
-                                            suffix="K"
-                                            :label="!isDownPaymentPercent ? 'Down payment (K)' : ''"
-                                            :outlined="!isDownPaymentPercent"
-                                            :filled="isDownPaymentPercent"
-                                            :disabled="isDownPaymentPercent">
-                                    </v-text-field>
-                                </div>
-
-                                <v-text-field
-                                        type="number"
-                                        label="Mortgage amount"
-                                        :value="downPaymentAmountRounded"
-                                        suffix="$"
-                                        filled
-                                        readonly>
-                                </v-text-field>
-
-                                <v-row>
-                                    <v-col>
-                                        <v-text-field
-                                                type="number"
-                                                label="Interest rate"
-                                                :value="interestRate"
-                                                suffix="%"
-                                                filled
-                                                readonly>
-                                        </v-text-field>
-                                    </v-col>
-
-                                    <v-col>
-                                        <v-text-field
-                                                type="number"
-                                                label="Amortization"
-                                                :value="amortization"
-                                                suffix="years"
-                                                filled
-                                                readonly>
-                                        </v-text-field>
-                                    </v-col>
-                                </v-row>
-
-                                <v-text-field
-                                        v-model="paymentPerYear"
-                                        type="number"
-                                        label="Payment frequency"
-                                        suffix="/years">
-                                </v-text-field>
-
-                                <v-text-field
-                                        type="number"
-                                        label="Payment amount"
-                                        :value="payment"
-                                        suffix="$"
-                                        filled
-                                        readonly>
-                                </v-text-field>
-                            </v-card-text>
                         </v-card>
                     </v-col>
                     <v-col>
                         <v-card class="mx-auto" max-width="550">
                             <v-card class="mx-auto pa-5">
+                                <h4>
+                                    Variable Mortgage: {{ numberWithSpaces(downPaymentAmountRounded) }} $
+                                    <br>
+                                    Total Interest: {{ numberWithSpaces(caculateVariableMoratageTotalInterest) }} $
+                                    <br>
+                                    Total cost: {{ numberWithSpaces(caculateVariableMoratageTotalCost) }} $
+                                </h4>
+
                                 <v-simple-table>
                                     <template v-slot:default>
                                         <thead>
@@ -174,7 +195,9 @@
                                         </thead>
                                         <tbody>
                                         <tr v-for="item in variablePaymentsFiltered" :key="item.id">
-                                            <td class="text-center">{{ item.id % 12 === 0 ? `(${item.id / 12}) ${item.id}` : item.id }}</td>
+                                            <td class="text-center">
+                                                {{ item.id % 12 === 0 ? `(${item.id / 12}) ${item.id}` : item.id }}
+                                            </td>
                                             <td class="text-center">{{ numberWithSpaces(item.interestRate) }} %</td>
                                             <td class="text-center">{{ numberWithSpaces(item.interest) }} $</td>
                                             <td class="text-center">{{ numberWithSpaces(item.capital) }} $</td>
@@ -183,15 +206,55 @@
                                         </tbody>
                                     </template>
                                 </v-simple-table>
-
-                                <v-card-title>
-                                    Variable Mortgage: {{ numberWithSpaces(downPaymentAmountRounded) }} $
-                                    <br>
-                                    Total Interest: {{ numberWithSpaces(caculateVariableMoratageTotalInterest) }} $
-                                    <br>
-                                    Total cost: {{ numberWithSpaces(caculateVariableMoratageTotalCost) }} $
-                                </v-card-title>
                             </v-card>
+                        </v-card>
+                    </v-col>
+                    <v-col>
+                        <v-card class="mx-auto" max-width="350" style="margin-top: -80px">
+                            <v-card-title>
+                                Variable Mortgage Config
+                            </v-card-title>
+
+                            <v-card-text>
+                                <v-text-field
+                                        v-model="paymentConfig.estimatedVariableMortgageRateInit"
+                                        type="number"
+                                        label="Initial Interest rate"
+                                        suffix="%"
+                                        outlined>
+                                </v-text-field>
+                            </v-card-text>
+
+                            <v-card-title>
+                                Variable Mortgage Predictions
+                            </v-card-title>
+
+                            <v-card-text>
+                                <v-row v-for="(item, key) of paymentConfig.estimatedVariableMortgageRate"
+                                       class="ma-0 pa-0">
+                                    <v-col class="ma-0 pa-0">
+                                        <v-text-field
+                                                class="ma-0 pa-0 pr-3"
+                                                type="number"
+                                                label="Month"
+                                                :value="key"
+                                                filled
+                                                readonly>
+                                        </v-text-field>
+                                    </v-col>
+                                    <v-col class="ma-0 pa-0">
+                                        <v-text-field
+                                                class="ma-0 pa-0 pl-3"
+                                                v-model="paymentConfig.estimatedVariableMortgageRate[key]"
+                                                type="number"
+                                                label="Interest rate predition"
+                                                suffix="%"
+                                                outlined
+                                                @change="paymentConfig.estimatedVariableMortgageRate = { ...paymentConfig.estimatedVariableMortgageRate }">
+                                        </v-text-field>
+                                    </v-col>
+                                </v-row>
+                            </v-card-text>
                         </v-card>
                     </v-col>
                 </v-row>
@@ -208,6 +271,7 @@
         vuetify: new Vuetify(),
         data() {
             return {
+                isFixMortgageVisible: true,
                 propertyPriceInput: 685.0,
                 downPayment: 20.0,
                 isDownPaymentPercent: true,
@@ -215,19 +279,20 @@
                 interestRate: 2.12,
                 paymentPerYear: 12.0,
                 paymentConfig: {
-                    ESTIMATED_VARIABLE_MORTGAGE_RATE: {
-                        0: 1.25,
+                    estimatedVariableMortgageRateInit: 1.25,
+                    estimatedVariableMortgageRate: {
                         3: 1.45,
                         6: 1.65,
                         9: 1.75,
-                        12: 1.85,
-                        15: 1.95,
-                        18: 2.0,
-                        21: 2.10,
-                        24: 2.15,
-                        27: 2.25,
-                        36: 2.50,
-                        48: 2.85,
+                        12: 1.80,
+                        15: 1.85,
+                        18: 1.95,
+                        21: 2.00,
+                        24: 2.10,
+                        30: 2.15,
+                        36: 2.30,
+                        42: 2.50,
+                        48: 2.75,
                     },
                     INITIAL_INTEREST_RATE: 1.25,
                     INTEREST_RATE_INCREMENT: 0.5,
@@ -301,22 +366,26 @@
                 return payments;
             },
             paymentsFiltered() {
-                return this.payments.slice(0 , this.paymentConfig.PAYMENT_MAX_QTY_FILTER).filter((item) => item.id === 1 || item.id % this.paymentConfig.INTEREST_RATE_INTERVAL === 0)
+                return this.payments.slice(0, this.paymentConfig.PAYMENT_MAX_QTY_FILTER).filter((item) => item.id === 1 || item.id % this.paymentConfig.INTEREST_RATE_INTERVAL === 0)
             },
             variablePayments() {
                 const payments = [];
                 const defaultInterestRate = this.interestRate;
 
-                let interestRate = this.paymentConfig.ESTIMATED_VARIABLE_MORTGAGE_RATE[0];
+                let interestRate = this.paymentConfig.estimatedVariableMortgageRateInit;
                 let residualBalance = this.downPaymentAmountRounded;
 
                 for (let i = 0; i < this.amortization * this.paymentPerYear; i++) {
-                    if (this.paymentConfig.ESTIMATED_VARIABLE_MORTGAGE_RATE[i]) {
-                        interestRate = this.paymentConfig.ESTIMATED_VARIABLE_MORTGAGE_RATE[i];
+                    if (this.paymentConfig.estimatedVariableMortgageRate[i + 1]) {
+                        interestRate = this.paymentConfig.estimatedVariableMortgageRate[i + 1];
                     }
 
                     if (i > this.paymentPerYear * 5 - 1) {
                         interestRate = defaultInterestRate;
+                    }
+
+                    if (typeof interestRate === 'string') {
+                        interestRate = parseFloat(interestRate);
                     }
 
                     const paymentInterest = this.calculatePaymentInterest(residualBalance, interestRate, this.paymentPerYear);
@@ -336,7 +405,7 @@
                 return payments;
             },
             variablePaymentsFiltered() {
-                return this.variablePayments.slice(0 , this.paymentConfig.PAYMENT_MAX_QTY_FILTER).filter((item) => item.id === 1 || item.id % this.paymentConfig.INTEREST_RATE_INTERVAL === 0)
+                return this.variablePayments.slice(0, this.paymentConfig.PAYMENT_MAX_QTY_FILTER).filter((item) => item.id === 1 || item.id % this.paymentConfig.INTEREST_RATE_INTERVAL === 0)
             },
             caculateMoratageTotalInterest() {
                 const reducer = (total, payment) => total + payment.interest;
@@ -347,7 +416,6 @@
                 return this.numberToFixed(this.payments.reduce(reducer, 0));
             },
             caculateVariableMoratageTotalInterest() {
-                console.log(this.variablePayments);
                 const reducer = (total, payment) => total + payment.interest;
                 return this.numberToFixed(this.variablePayments.reduce(reducer, 0));
             },
@@ -361,6 +429,9 @@
                 return parseFloat(number.toFixed(precision));
             },
             numberWithSpaces(x) {
+                if (typeof x === 'string') {
+                    x = parseFloat(x);
+                }
                 x = x.toFixed(2);
                 const pattern = /(-?\d+)(\d{3})/;
                 while (pattern.test(x))
@@ -376,67 +447,6 @@
             },
         },
     });
-
-    /*
-    const numberToFixed = (number = 0, precision = 2) => parseFloat(number.toFixed(precision));
-
-    // Loan amount (p)
-    // Interest rate (r)
-    // Number of years (t)
-    // Payments per year (n)
-    const calculatePayment = (p, r, t, n) => {
-        const interestRatio = r / n;
-        const offSet1 = Math.pow(1 + interestRatio, n * t);
-        const offSet2 = offSet1 - 1;
-
-        return p * interestRatio * offSet1 / offSet2;
-    }
-
-    // Loan amount (p)
-    // Interest rate (r)
-    // Number of years (t)
-    // Payments per year (n)
-    const calculatePaymentInterest = (p, r, n) => {
-        return p * numberToFixed(r / n, 10);
-    }
-
-    const payments = [];
-    const propertyPrice = 685000.0;
-    const downPayment = 137000.0;
-    const downPaymentPercentage = 0.20;
-    const amortization = 25.0;
-    const interestRate = 2.12 / 100.0;
-    const paymentPerYear = 12.0;
-    const paymentTotalQty = amortization * paymentPerYear;
-
-    let loanAmount = propertyPrice;
-
-    if (downPayment) {
-        loanAmount = propertyPrice - downPayment;
-    } else if (downPaymentPercentage) {
-        loanAmount = propertyPrice - (propertyPrice * downPaymentPercentage);
-    }
-
-    const payment = numberToFixed(calculatePayment(loanAmount, interestRate, amortization, paymentPerYear));
-
-    let residualBalance = loanAmount;
-    for (let i = 0; i < paymentTotalQty; i++) {
-        const paymentInterest = calculatePaymentInterest(residualBalance, interestRate, paymentPerYear);
-        const paymentCapital = payment - paymentInterest;
-
-        residualBalance -= paymentCapital;
-
-        payments.push({
-            interest: paymentInterest.toFixed(2),
-            capital: paymentCapital.toFixed(2),
-            balance: residualBalance.toFixed(2)
-        });
-    }
-
-    for (let i = 0; i < 6; i++) {
-        console.log(i * 12, payments[i ? i * 12 - 1 : 0]);
-    }
-    */
 </script>
 </body>
 </html>
