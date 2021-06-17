@@ -129,7 +129,9 @@
                                     <br>
                                     Total Interest: {{ numberWithSpaces(caculateMoratageTotalInterest) }} $
                                     <br>
-                                    Total cost: {{ numberWithSpaces(caculateMoratageTotalCost) }} $
+                                    <strong :style="caculateMoratageTotalCost < caculateVariableMoratageTotalCost ? 'color: green': 'color: red'">
+                                        Total cost: {{ numberWithSpaces(caculateMoratageTotalCost) }} $
+                                    </strong>
                                 </h4>
 
                                 <v-simple-table>
@@ -173,7 +175,9 @@
                                     <br>
                                     Total Interest: {{ numberWithSpaces(caculateVariableMoratageTotalInterest) }} $
                                     <br>
-                                    Total cost: {{ numberWithSpaces(caculateVariableMoratageTotalCost) }} $
+                                    <strong :style="caculateVariableMoratageTotalCost < caculateMoratageTotalCost ? 'color: green': 'color: red'">
+                                        Total cost: {{ numberWithSpaces(caculateVariableMoratageTotalCost) }} $
+                                    </strong>
                                 </h4>
 
                                 <v-simple-table>
@@ -418,16 +422,14 @@
                 return this.numberToFixed(this.payments.reduce(reducer, 0));
             },
             caculateMoratageTotalCost() {
-                const reducer = (total, payment) => total + payment.interest + payment.capital;
-                return this.downPaymentAmountRounded + this.numberToFixed(this.payments.reduce(reducer, 0));
+                return this.numberToFixed(this.propertyPriceInput * 1000.0 + this.caculateMoratageTotalInterest);
             },
             caculateVariableMoratageTotalInterest() {
                 const reducer = (total, payment) => total + payment.interest;
                 return this.numberToFixed(this.variablePayments.reduce(reducer, 0));
             },
             caculateVariableMoratageTotalCost() {
-                const reducer = (total, payment) => total + payment.interest + payment.capital;
-                return this.downPaymentAmountRounded + this.numberToFixed(this.variablePayments.reduce(reducer, 0));
+                return this.numberToFixed(this.propertyPriceInput * 1000.0 + this.caculateVariableMoratageTotalInterest);
             },
         },
         methods: {
