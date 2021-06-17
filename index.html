@@ -218,9 +218,9 @@
                         </v-card>
                     </v-col>
                     <v-col>
-                        <v-card class="mx-auto" max-width="350" style="margin-top: -80px">
+                        <v-card class="mx-auto" max-width="275" style="margin-top: -80px">
                             <v-card-title>
-                                Variable Mortgage Prediction Rates
+                                Variable Mortgage Rate
                             </v-card-title>
 
                             <v-card-text>
@@ -249,10 +249,10 @@
                                     </v-col>
                                     <v-col class="ma-0 pa-0">
                                         <v-text-field
-                                                class="ma-0 pa-0 pl-3"
+                                                class="ma-0 pa-0"
                                                 v-model="paymentConfig.estimatedVariableMortgageRate[key]"
                                                 type="number"
-                                                label="Interest rate predition"
+                                                label="Prediction Rate"
                                                 suffix="%"
                                                 outlined
                                                 @change="paymentConfig.estimatedVariableMortgageRate = { ...paymentConfig.estimatedVariableMortgageRate }">
